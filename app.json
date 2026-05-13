@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "FoodRush",
+    "slug": "food-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0D0D"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.foodrush.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FF4B2B"
+      },
+      "package": "com.foodrush.app"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "8c9dd112-c66d-4726-a84d-33d2d8cac4dd"
+      }
+    }
+  }
+}
