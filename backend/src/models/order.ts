@@ -48,7 +48,7 @@ const orderSchema = new Schema(
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform: (_doc, ret) => {
+      transform: (_doc, ret: any) => {
         ret.id = ret._id.toString();
         ret.createdAt = ret.createdAt?.toISOString?.() ?? ret.createdAt;
         delete ret._id;

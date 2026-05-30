@@ -1,4 +1,4 @@
-export const API_HOST = 'http://192.168.43.150:4000';
+export const API_HOST = 'https://foodrush-hrsc.onrender.com';
 export const API_BASE_URL = `${API_HOST}/api`;
 
 export type ApiRestaurant = {

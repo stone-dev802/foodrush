@@ -24,7 +24,7 @@ export async function createOrder(input: {
       status: 'confirmed',
     });
 
-    return order.toJSON() as Order;
+    return order.toJSON() as unknown as Order;
   }
 
   const order: Order = {
@@ -46,7 +46,8 @@ export async function createOrder(input: {
 
 export async function listOrders(userId?: string) {
   if (hasMongoConfig()) {
-    return OrderModel.find(userId ? { userId } : {}).sort({ createdAt: -1 });
+    const foundOrders = await OrderModel.find(userId ? { userId } : {}).sort({ createdAt: -1 });
+    return foundOrders.map((order) => order.toJSON() as unknown as Order);
   }
 
   if (!userId) {
