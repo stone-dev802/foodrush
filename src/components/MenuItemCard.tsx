@@ -1,101 +1,145 @@
-// src/components/MenuItemCard.tsx
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { MenuItem } from '../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useThemeStore } from '../store/themeStore';
+import { getThemeColors } from '../theme/colors';
+import { getFoodIcon } from '../theme/icons';
 
-type Props = {
-  item: MenuItem;
-  qty: number;
-  onAdd: () => void;
-  onIncrease: () => void;
+type MenuItemCardProps = {
+  item: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    emoji?: string;
+    category?: string;
+    popular?: boolean;
+  };
+  onPress?: () => void;
+  onAdd?: () => void;
+  onAddToCart?: () => void;
 };
 
-export default function MenuItemCard({ item, qty, onAdd, onIncrease }: Props) {
-  return (
-    <View style={styles.card}>
-      <Text style={styles.emoji}>{item.emoji}</Text>
+export function MenuItemCard({ item, onPress, onAdd, onAddToCart }: MenuItemCardProps) {
+  const { mode } = useThemeStore();
+  const colors = getThemeColors(mode);
+  const iconName = getFoodIcon(item.emoji ?? item.name, item.category);
 
-      <View style={styles.info}>
+  return (
+    <Pressable style={({ pressed }) => [styles.card, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={onPress}>
+      <View style={[styles.foodVisual, { backgroundColor: colors.surfaceMuted }]}>
+        <MaterialCommunityIcons name={iconName as never} size={34} color={colors.primary} />
+      </View>
+
+      <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.name}>{item.name}</Text>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+            {item.name}
+          </Text>
           {item.popular && (
-            <View style={styles.popularBadge}>
-              <Text style={styles.popularText}>🔥 Populaire</Text>
+            <View style={styles.badge}>
+              <MaterialCommunityIcons name="fire" size={13} color="#EA580C" />
+              <Text style={styles.badgeText}>Populaire</Text>
             </View>
           )}
         </View>
-        <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
-        <Text style={styles.price}>{item.price.toLocaleString()} FCFA</Text>
-      </View>
 
-      <View style={styles.right}>
-        {qty === 0 ? (
-          <TouchableOpacity style={styles.addBtn} onPress={onAdd}>
-            <Text style={styles.addBtnText}>+</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.qtyBadge}>
-            <Text style={styles.qtyText}>{qty}</Text>
-          </View>
+        {!!item.description && (
+          <Text style={[styles.description, { color: colors.textMuted }]} numberOfLines={2}>
+            {item.description}
+          </Text>
         )}
+
+        <View style={styles.footer}>
+          <Text style={[styles.price, { color: colors.primary }]}>{item.price.toLocaleString('fr-FR')} FCFA</Text>
+          <Pressable style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={onAdd ?? onAddToCart}>
+            <MaterialCommunityIcons name="plus" size={20} color="#FFFFFF" />
+          </Pressable>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
+export default MenuItemCard;
+
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
+    gap: 14,
+    marginBottom: 14,
+    padding: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
   },
-  emoji: { fontSize: 38, minWidth: 44, textAlign: 'center' },
-  info: { flex: 1, gap: 3 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs, flexWrap: 'wrap' },
-  name: { fontSize: FontSize.base, fontWeight: '700', color: Colors.text },
-  popularBadge: {
-    backgroundColor: 'rgba(255,75,43,0.12)',
-    borderRadius: Radius.full,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: Colors.borderActive,
+  pressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.99 }],
   },
-  popularText: { fontSize: 9, color: Colors.primary, fontWeight: '700' },
-  desc: { fontSize: FontSize.xs, color: Colors.textMuted, lineHeight: 16 },
-  price: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.primary, marginTop: 2 },
-  right: { alignItems: 'center', justifyContent: 'center' },
-  addBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
-    backgroundColor: Colors.primary,
+  foodVisual: {
     alignItems: 'center',
+    backgroundColor: '#FFF7ED',
+    borderRadius: 16,
+    height: 76,
     justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    width: 76,
   },
-  addBtnText: { color: Colors.white, fontSize: 22, fontWeight: '700', lineHeight: 26 },
-  qtyBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
-    backgroundColor: Colors.primaryBg,
+  content: {
+    flex: 1,
+  },
+  titleRow: {
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.borderActive,
+    flexDirection: 'row',
+    gap: 8,
   },
-  qtyText: { color: Colors.primary, fontSize: FontSize.base, fontWeight: '800' },
+  name: {
+    color: '#0F172A',
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  badge: {
+    alignItems: 'center',
+    backgroundColor: '#FFEDD5',
+    borderRadius: 999,
+    flexDirection: 'row',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  badgeText: {
+    color: '#EA580C',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  description: {
+    color: '#64748B',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 5,
+  },
+  footer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  price: {
+    color: '#F97316',
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: '#F97316',
+    borderRadius: 999,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
 });

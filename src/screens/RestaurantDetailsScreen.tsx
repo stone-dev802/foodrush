@@ -1,374 +1,140 @@
-// src/screens/RestaurantDetailsScreen.tsx
-
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  Animated,
-} from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/types';
-import { MenuItem } from '../data/mockData';
+import React, { useMemo } from 'react';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { MenuItemCard } from '../components/MenuItemCard';
+import { useRestaurantDetails } from '../hooks/useRestaurantDetails';
 import { useCartStore } from '../store/cartStore';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
-import MenuItemCard from '../components/MenuItemCard';
+import { useFavoritesStore } from '../store/favoritesStore';
+import { useThemeStore } from '../store/themeStore';
+import { getThemeColors } from '../theme/colors';
+import { getFoodIcon } from '../theme/icons';
+import { getRestaurantImage } from '../theme/restaurantImages';
 
-type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'RestaurantDetails'>;
-  route: RouteProp<RootStackParamList, 'RestaurantDetails'>;
-};
+export function RestaurantDetailsScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { addItem } = useCartStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const { mode } = useThemeStore();
+  const colors = getThemeColors(mode);
+  const restaurantId = route.params?.restaurantId;
+  const { restaurant, source } = useRestaurantDetails(restaurantId);
+  const menu = useMemo(() => restaurant?.menu ?? [], [restaurant]);
+  const heroImage = getRestaurantImage(restaurant?.category ?? restaurant?.cuisine);
+  const favorite = restaurant ? isFavorite(restaurant.id) : false;
 
-export default function RestaurantDetailsScreen({ navigation, route }: Props) {
-  const { restaurant } = route.params;
-  const { addToCart, getItemQty, getCount } = useCartStore();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
-  const cartCount = getCount();
-
-  // Group menu items by category
-  const menuByCategory = restaurant.menu.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, MenuItem[]>);
-
-  const categories = Object.keys(menuByCategory);
-
-  const handleAddToCart = (item: MenuItem) => {
-    addToCart(item, restaurant.id, restaurant.name);
-  };
+  if (!restaurant) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Ionicons name="restaurant-outline" size={42} color="#CBD5E1" />
+        <Text style={styles.centerText}>Restaurant introuvable</Text>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
-
-      {/* Hero */}
-      <View style={styles.hero}>
-        <Text style={styles.heroEmoji}>{restaurant.emoji}</Text>
-
-        {/* Back button */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-
-        {/* Favorite button */}
-        <TouchableOpacity style={styles.favoriteBtn}>
-          <Text style={styles.favoriteIcon}>♡</Text>
-        </TouchableOpacity>
-
-        {/* Badge */}
-        <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>{restaurant.badge}</Text>
-        </View>
-      </View>
-
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        {/* Info */}
-        <View style={styles.infoSection}>
-          <Text style={styles.categoryLabel}>{restaurant.category.toUpperCase()}</Text>
-          <Text style={styles.restaurantName}>{restaurant.name}</Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.tagsScroll}
-          >
-            {restaurant.tags.map((tag) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* Stats row */}
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: Colors.gold }]}>
-                ⭐ {restaurant.rating}
-              </Text>
-              <Text style={styles.statLabel}>Note</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: Colors.primary }]}>
-                {restaurant.deliveryTime}
-              </Text>
-              <Text style={styles.statLabel}>Livraison</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: Colors.green }]}>
-                {restaurant.distance}
-              </Text>
-              <Text style={styles.statLabel}>Distance</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.stat}>
-              <Text style={[styles.statValue, { color: Colors.text }]}>
-                {restaurant.deliveryFee.toLocaleString()}F
-              </Text>
-              <Text style={styles.statLabel}>Frais livr.</Text>
-            </View>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ImageBackground source={{ uri: heroImage }} style={styles.hero} imageStyle={styles.heroImage}>
+          <View style={styles.heroOverlay} />
+          <View style={styles.heroTop}>
+            <Pressable style={styles.heroButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </Pressable>
+            <Pressable style={styles.heroButton} onPress={() => toggleFavorite(restaurant.id)}>
+              <Ionicons name={favorite ? 'heart' : 'heart-outline'} size={22} color={favorite ? '#FF7A2B' : '#FFFFFF'} />
+            </Pressable>
           </View>
+          <View style={styles.heroIcon}>
+            <MaterialCommunityIcons name={getFoodIcon(restaurant.emoji ?? restaurant.name, restaurant.category) as never} size={64} color="#FFFFFF" />
+          </View>
+        </ImageBackground>
 
-          {/* Open status */}
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: Colors.green }]} />
-            <Text style={styles.statusText}>Ouvert maintenant</Text>
-            <Text style={styles.minOrder}>
-              · Min : {restaurant.minOrder.toLocaleString()} FCFA
-            </Text>
+        <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.name, { color: colors.text }]}>{restaurant.name}</Text>
+          <Text style={[styles.category, { color: colors.textMuted }]}>{restaurant.category ?? restaurant.cuisine ?? 'Restaurant'}</Text>
+          <Text style={[styles.sourceText, { color: colors.textSoft }]}>
+            Source: {source === 'api' ? 'API backend' : 'donnees locales'}
+          </Text>
+
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <MaterialCommunityIcons name="star" size={17} color="#F59E0B" />
+              <Text style={styles.statText}>{restaurant.rating ?? '4.8'}</Text>
+            </View>
+            <View style={styles.stat}>
+              <Ionicons name="time-outline" size={17} color="#64748B" />
+              <Text style={styles.statText}>{restaurant.deliveryTime ?? '25-35 min'}</Text>
+            </View>
+            {!!restaurant.distance && (
+              <View style={styles.stat}>
+                <Ionicons name="location-outline" size={17} color="#64748B" />
+                <Text style={styles.statText}>{restaurant.distance}</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Category tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.menuTabs}
-        >
-          {categories.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.menuTab,
-                activeSection === cat && styles.menuTabActive,
-              ]}
-              onPress={() => setActiveSection(activeSection === cat ? null : cat)}
-            >
-              <Text
-                style={[
-                  styles.menuTabText,
-                  activeSection === cat && styles.menuTabTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Menu items */}
-        <View style={styles.menuContainer}>
-          {categories.map((cat) => {
-            if (activeSection && activeSection !== cat) return null;
-            return (
-              <View key={cat}>
-                <Text style={styles.menuCategoryTitle}>🍽️ {cat}</Text>
-                {menuByCategory[cat].map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    qty={getItemQty(item.id)}
-                    onAdd={() => handleAddToCart(item)}
-                    onIncrease={() => handleAddToCart(item)}
-                  />
-                ))}
-              </View>
-            );
-          })}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <MaterialCommunityIcons name="silverware-fork-knife" size={21} color="#F97316" />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Menu</Text>
+          </View>
+          <Text style={styles.sectionMeta}>{menu.length} plats</Text>
         </View>
 
-        <View style={{ height: 100 }} />
+        {menu.map((item: any) => (
+          <MenuItemCard
+            key={item.id}
+            item={item}
+            onAdd={() =>
+              addItem({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                emoji: item.emoji,
+                category: item.category,
+                restaurantId: restaurant.id,
+              })
+            }
+          />
+        ))}
       </ScrollView>
 
-      {/* Cart FAB */}
-      {cartCount > 0 && (
-        <View style={styles.cartFab}>
-          <TouchableOpacity
-            style={styles.cartFabBtn}
-            onPress={() => navigation.navigate('Main')}
-          >
-            <Text style={styles.cartFabBadge}>{cartCount}</Text>
-            <Text style={styles.cartFabText}>Voir mon panier</Text>
-            <Text style={styles.cartFabArrow}>→</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+      <Pressable style={styles.cartFab} onPress={() => navigation.navigate('Main', { screen: 'Cart' })}>
+        <Ionicons name="cart" size={21} color="#FFFFFF" />
+        <Text style={styles.cartFabText}>Voir le panier</Text>
+        <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+      </Pressable>
+    </View>
   );
 }
 
+export default RestaurantDetailsScreen;
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.dark,
-  },
-  hero: {
-    height: 220,
-    backgroundColor: '#1a0a05',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  heroEmoji: {
-    fontSize: 80,
-  },
-  backBtn: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    width: 40,
-    height: 40,
-    borderRadius: Radius.sm,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  backIcon: { color: Colors.text, fontSize: 20 },
-  favoriteBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: Radius.sm,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  favoriteIcon: { color: Colors.text, fontSize: 20 },
-  heroBadge: {
-    position: 'absolute',
-    bottom: 12,
-    left: 16,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-  },
-  heroBadgeText: { color: Colors.white, fontSize: FontSize.xs, fontWeight: '700' },
-
-  body: { flex: 1 },
-
-  infoSection: {
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  categoryLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.textMuted,
-    fontWeight: '600',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  restaurantName: {
-    fontSize: FontSize.xxl,
-    fontWeight: '800',
-    color: Colors.text,
-    marginBottom: Spacing.sm,
-  },
-  tagsScroll: { marginBottom: Spacing.md },
-  tag: {
-    backgroundColor: Colors.dark3,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: Radius.full,
-    marginRight: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tagText: { fontSize: FontSize.xs, color: Colors.textMuted, fontWeight: '500' },
-
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  stat: { flex: 1, alignItems: 'center', gap: 4 },
-  statValue: { fontSize: FontSize.base, fontWeight: '700' },
-  statLabel: { fontSize: FontSize.xs, color: Colors.textMuted },
-  statDivider: { width: 1, height: 32, backgroundColor: Colors.border },
-
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: FontSize.sm, color: Colors.green, fontWeight: '600' },
-  minOrder: { fontSize: FontSize.sm, color: Colors.textMuted },
-
-  menuTabs: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
-    flexDirection: 'row',
-  },
-  menuTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.dark3,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  menuTabActive: {
-    backgroundColor: Colors.primaryBg,
-    borderColor: Colors.primary,
-  },
-  menuTabText: { fontSize: FontSize.sm, color: Colors.textMuted, fontWeight: '600' },
-  menuTabTextActive: { color: Colors.primary },
-
-  menuContainer: { padding: Spacing.md },
-  menuCategoryTitle: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-
-  cartFab: {
-    position: 'absolute',
-    bottom: 20,
-    left: Spacing.md,
-    right: Spacing.md,
-  },
-  cartFabBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.md,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  cartFabBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    color: Colors.white,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    textAlign: 'center',
-    lineHeight: 28,
-    fontWeight: '800',
-    fontSize: FontSize.sm,
-  },
-  cartFabText: {
-    color: Colors.white,
-    fontSize: FontSize.md,
-    fontWeight: '700',
-  },
-  cartFabArrow: { color: Colors.white, fontSize: 20 },
+  screen: { backgroundColor: '#F8FAFC', flex: 1 },
+  content: { paddingBottom: 100 },
+  center: { alignItems: 'center', backgroundColor: '#F8FAFC', flex: 1, justifyContent: 'center', padding: 24 },
+  centerText: { color: '#64748B', fontSize: 16, fontWeight: '800', marginTop: 10 },
+  hero: { backgroundColor: '#F97316', borderBottomLeftRadius: 28, borderBottomRightRadius: 28, minHeight: 270, overflow: 'hidden', padding: 20 },
+  heroImage: { borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.42)' },
+  heroTop: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  heroButton: { alignItems: 'center', backgroundColor: 'rgba(15,23,42,0.18)', borderRadius: 999, height: 44, justifyContent: 'center', width: 44 },
+  heroIcon: { alignItems: 'center', flex: 1, justifyContent: 'center' },
+  infoCard: { backgroundColor: '#FFFFFF', borderRadius: 24, marginHorizontal: 20, marginTop: -36, padding: 18 },
+  name: { color: '#0F172A', fontSize: 25, fontWeight: '900' },
+  category: { color: '#64748B', fontSize: 14, fontWeight: '700', marginTop: 5 },
+  sourceText: { fontSize: 11, fontWeight: '700', marginTop: 6 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 },
+  stat: { alignItems: 'center', flexDirection: 'row', gap: 5 },
+  statText: { color: '#475569', fontSize: 13, fontWeight: '800' },
+  sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, marginHorizontal: 20, marginTop: 24 },
+  sectionTitleRow: { alignItems: 'center', flexDirection: 'row', gap: 7 },
+  sectionTitle: { color: '#0F172A', fontSize: 20, fontWeight: '900' },
+  sectionMeta: { color: '#94A3B8', fontSize: 13, fontWeight: '900' },
+  cartFab: { alignItems: 'center', backgroundColor: '#0F172A', borderRadius: 18, bottom: 22, flexDirection: 'row', gap: 8, justifyContent: 'center', left: 20, padding: 16, position: 'absolute', right: 20 },
+  cartFabText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' },
 });

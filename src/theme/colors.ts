@@ -1,30 +1,55 @@
-// src/theme/colors.ts
+import type { ThemeMode } from '../store/themeStore';
 
+export const lightColors = {
+  background: '#FAF8F5',
+  surface: '#FFFFFF',
+  surfaceMuted: '#FFF3E8',
+  text: '#171717',
+  textMuted: '#6F6A64',
+  textSoft: '#AAA29A',
+  border: '#EEE7DF',
+  primary: '#F36B21',
+  primaryDark: '#D94F11',
+  danger: '#DC2626',
+  dangerSurface: '#FEF2F2',
+  darkSurface: '#15110E',
+};
+
+export const darkColors = {
+  background: '#0F0D0B',
+  surface: '#191512',
+  surfaceMuted: '#261D17',
+  text: '#FFF9F2',
+  textMuted: '#CFC3B8',
+  textSoft: '#8E8278',
+  border: '#2B241E',
+  primary: '#FF7A2B',
+  primaryDark: '#F36B21',
+  danger: '#F87171',
+  dangerSurface: '#3B1116',
+  darkSurface: '#020617',
+};
+
+export function getThemeColors(mode?: ThemeMode) {
+  return mode === 'dark' ? darkColors : lightColors;
+}
 export const Colors = {
-  primary: '#FF4B2B',
-  primaryLight: '#FF7043',
-  primaryBg: 'rgba(255, 75, 43, 0.1)',
+  dark: '#0B1120',
+  dark2: '#111827',
+  primary: '#F97316',
+  text: '#F8FAFC',
+  textMuted: '#CBD5E1',
+  borderActive: '#F97316',
+};
 
-  dark: '#0D0D0D',
-  dark2: '#1A1A1A',
-  dark3: '#242424',
-  card: '#1E1E1E',
-
-  text: '#F0F0F0',
-  textMuted: '#888888',
-  textSubtle: 'rgba(255,255,255,0.4)',
-
-  gold: '#FFD700',
-  green: '#4CAF50',
-  greenBg: 'rgba(76, 175, 80, 0.12)',
-  error: '#F44336',
-  errorBg: 'rgba(244, 67, 54, 0.1)',
-
-  border: 'rgba(255,255,255,0.07)',
-  borderActive: 'rgba(255,75,43,0.4)',
-
-  white: '#FFFFFF',
-  black: '#000000',
+export const FontSize = {
+  xs: 11,
+  sm: 13,
+  base: 15,
+  md: 17,
+  lg: 20,
+  xl: 24,
+  xxl: 32,
 };
 
 export const Spacing = {
@@ -33,24 +58,4 @@ export const Spacing = {
   md: 16,
   lg: 24,
   xl: 32,
-  xxl: 48,
-};
-
-export const Radius = {
-  sm: 8,
-  md: 12,
-  lg: 18,
-  xl: 24,
-  full: 999,
-};
-
-export const FontSize = {
-  xs: 11,
-  sm: 12,
-  base: 14,
-  md: 16,
-  lg: 18,
-  xl: 22,
-  xxl: 26,
-  xxxl: 32,
 };

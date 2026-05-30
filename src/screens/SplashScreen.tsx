@@ -10,12 +10,12 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
 import { Colors, FontSize, Spacing } from '../theme/colors';
 
 type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'Splash'>;
+  navigation: {
+    replace: (screen: string) => void;
+  };
 };
 
 export default function SplashScreen({ navigation }: Props) {
@@ -63,7 +63,7 @@ export default function SplashScreen({ navigation }: Props) {
         ]}
       >
         <Image
-          source={require('../../assets/icon.png')}
+          source={require('../../assets/logo.png')}
           style={styles.logoImage}
           resizeMode="contain"
         />

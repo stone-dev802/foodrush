@@ -1,0 +1,168 @@
+[
+  {
+    "name": "Burger Palace",
+    "category": "burger",
+    "city": "Douala, Cameroun",
+    "address": "Bonapriso, Douala, Cameroun",
+    "badge": "Promo",
+    "rating": 4.8,
+    "distance": "1.2 km",
+    "deliveryTime": "15-25 min",
+    "tags": ["Burger", "Americain", "Fast food"],
+    "deliveryFee": 500,
+    "minOrder": 3000,
+    "isOpen": true,
+    "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
+    "menu": [
+      {
+        "id": "m-burger-1",
+        "name": "Burger signature",
+        "description": "Steak grille, cheddar, salade, tomate et sauce FoodRush.",
+        "price": 3500,
+        "category": "burger",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
+      },
+      {
+        "id": "m-burger-2",
+        "name": "Double cheese burger",
+        "description": "Double steak, double cheddar, oignons caramelises.",
+        "price": 4500,
+        "category": "burger",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1550547660-d9450f859349"
+      }
+    ]
+  },
+  {
+    "name": "Pizza Napoletana",
+    "category": "pizza",
+    "city": "Yaounde, Cameroun",
+    "address": "Bastos, Yaounde, Cameroun",
+    "badge": "Promo",
+    "rating": 4.6,
+    "distance": "1.5 km",
+    "deliveryTime": "20-30 min",
+    "tags": ["Pizza", "Italien", "Fromage"],
+    "deliveryFee": 500,
+    "minOrder": 3500,
+    "isOpen": true,
+    "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38",
+    "menu": [
+      {
+        "id": "m-pizza-1",
+        "name": "Pizza pepperoni",
+        "description": "Sauce tomate, mozzarella, pepperoni et basilic.",
+        "price": 5000,
+        "category": "pizza",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38"
+      },
+      {
+        "id": "m-pizza-2",
+        "name": "Pizza royale",
+        "description": "Jambon, champignons, olives, fromage fondant.",
+        "price": 5500,
+        "category": "pizza",
+        "popular": false,
+        "imageUrl": "https://images.unsplash.com/photo-1513104890138-7c749659a591"
+      }
+    ]
+  },
+  {
+    "name": "Douala Bowl",
+    "category": "local",
+    "city": "Douala, Cameroun",
+    "address": "Akwa, Douala, Cameroun",
+    "badge": "Local",
+    "rating": 4.7,
+    "distance": "2.4 km",
+    "deliveryTime": "30-45 min",
+    "tags": ["Local", "Riz", "Poulet"],
+    "deliveryFee": 700,
+    "minOrder": 2500,
+    "isOpen": true,
+    "imageUrl": "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d",
+    "menu": [
+      {
+        "id": "m-local-1",
+        "name": "Riz saute au poulet",
+        "description": "Riz saute aux legumes, poulet marine et sauce maison.",
+        "price": 3000,
+        "category": "local",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d"
+      },
+      {
+        "id": "m-local-2",
+        "name": "Poulet braise",
+        "description": "Poulet braise, frites, plantain et sauce epicee.",
+        "price": 4500,
+        "category": "local",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b"
+      }
+    ]
+  },
+  {
+    "name": "Urban Chicken",
+    "category": "chicken",
+    "city": "Yaounde, Cameroun",
+    "address": "Mvan, Yaounde, Cameroun",
+    "badge": "Populaire",
+    "rating": 4.5,
+    "distance": "2.0 km",
+    "deliveryTime": "25-35 min",
+    "tags": ["Poulet", "Grill", "Frites"],
+    "deliveryFee": 600,
+    "minOrder": 3000,
+    "isOpen": true,
+    "imageUrl": "https://images.unsplash.com/photo-1527477396000-e27163b481c2",
+    "menu": [
+      {
+        "id": "m-chicken-1",
+        "name": "Wings croustillants",
+        "description": "Ailes de poulet croustillantes, sauce barbecue.",
+        "price": 3800,
+        "category": "chicken",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1527477396000-e27163b481c2"
+      }
+    ]
+  },
+  {
+    "name": "Cafe Rush",
+    "category": "drinks",
+    "city": "Douala, Cameroun",
+    "address": "Bonamoussadi, Douala, Cameroun",
+    "badge": "Nouveau",
+    "rating": 4.4,
+    "distance": "900 m",
+    "deliveryTime": "10-20 min",
+    "tags": ["Cafe", "Boissons", "Dessert"],
+    "deliveryFee": 300,
+    "minOrder": 1500,
+    "isOpen": true,
+    "imageUrl": "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
+    "menu": [
+      {
+        "id": "m-drink-1",
+        "name": "Cafe glace",
+        "description": "Cafe froid, lait, caramel et glacons.",
+        "price": 1800,
+        "category": "drinks",
+        "popular": true,
+        "imageUrl": "https://images.unsplash.com/photo-1509042239860-f550ce710b93"
+      },
+      {
+        "id": "m-drink-2",
+        "name": "Jus naturel",
+        "description": "Jus frais selon disponibilite du jour.",
+        "price": 1500,
+        "category": "drinks",
+        "popular": false,
+        "imageUrl": "https://images.unsplash.com/photo-1600271886742-f049cd451bba"
+      }
+    ]
+  }
+]

@@ -1,140 +1,178 @@
-// src/components/RestaurantCard.tsx
+import React from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useThemeStore } from '../store/themeStore';
+import { useFavoritesStore } from '../store/favoritesStore';
+import { getThemeColors } from '../theme/colors';
+import { getRestaurantImage } from '../theme/restaurantImages';
 
-import React, { useEffect, useRef } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
-} from 'react-native';
-import { Restaurant } from '../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
-
-type Props = {
-  restaurant: Restaurant;
-  onPress: () => void;
-  delay?: number;
+type RestaurantCardProps = {
+  restaurant: {
+    id: string | number;
+    name: string;
+    category?: string;
+    cuisine?: string;
+    rating?: number;
+    distance?: string;
+    deliveryTime?: string;
+    emoji?: string;
+  };
+  onPress?: () => void;
 };
 
-export default function RestaurantCard({ restaurant, onPress, delay = 0 }: Props) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 400, delay, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay, useNativeDriver: true }),
-    ]).start();
-  }, []);
+export function RestaurantCard({ restaurant, onPress }: RestaurantCardProps) {
+  const { mode } = useThemeStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const colors = getThemeColors(mode);
+  const imageUri = getRestaurantImage(restaurant.category ?? restaurant.cuisine);
+  const favorite = isFavorite(restaurant.id);
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
-        {/* Image placeholder */}
-        <View style={styles.imageArea}>
-          <Text style={styles.emoji}>{restaurant.emoji}</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{restaurant.badge}</Text>
+    <Pressable style={({ pressed }) => [styles.card, { backgroundColor: colors.surface }, pressed && styles.pressed]} onPress={onPress}>
+      <View style={styles.visual}>
+        <Image source={{ uri: imageUri }} style={styles.image} />
+        <Pressable
+          style={styles.favorite}
+          onPress={(event) => {
+            event.stopPropagation();
+            toggleFavorite(restaurant.id);
+          }}
+        >
+          <MaterialCommunityIcons
+            name={favorite ? 'heart' : 'heart-outline'}
+            size={17}
+            color={favorite ? colors.primary : colors.text}
+          />
+        </Pressable>
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.titleRow}>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+            {restaurant.name}
+          </Text>
+          <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+            <Text style={styles.badgeText}>Promo</Text>
           </View>
-          {restaurant.isOpen && (
-            <View style={styles.openBadge}>
-              <View style={styles.openDot} />
-              <Text style={styles.openText}>Ouvert</Text>
+        </View>
+        {!!(restaurant.category ?? restaurant.cuisine) && (
+          <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
+            {restaurant.category ?? restaurant.cuisine}
+          </Text>
+        )}
+
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <MaterialCommunityIcons name="star" size={15} color="#F59E0B" />
+            <Text style={[styles.metaText, { color: colors.textMuted }]}>{restaurant.rating ?? '4.7'}</Text>
+          </View>
+          <Text style={[styles.dot, { color: colors.textSoft }]}>•</Text>
+          <View style={styles.metaItem}>
+            <MaterialCommunityIcons name="clock-outline" size={15} color="#64748B" />
+            <Text style={[styles.metaText, { color: colors.textMuted }]}>{restaurant.deliveryTime ?? '25-35 min'}</Text>
+          </View>
+          {!!restaurant.distance && (
+            <View style={styles.metaItem}>
+              <MaterialCommunityIcons name="map-marker-outline" size={15} color="#64748B" />
+              <Text style={[styles.metaText, { color: colors.textMuted }]}>{restaurant.distance}</Text>
             </View>
           )}
         </View>
-
-        {/* Info */}
-        <View style={styles.info}>
-          <View style={styles.titleRow}>
-            <Text style={styles.name}>{restaurant.name}</Text>
-            <View style={styles.ratingChip}>
-              <Text style={styles.ratingStar}>⭐</Text>
-              <Text style={styles.ratingValue}>{restaurant.rating}</Text>
-            </View>
-          </View>
-
-          <View style={styles.tagsRow}>
-            {restaurant.tags.slice(0, 3).map((t) => (
-              <View key={t} style={styles.tag}>
-                <Text style={styles.tagText}>{t}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.metaRow}>
-            <Text style={styles.meta}>⏱️ {restaurant.deliveryTime}</Text>
-            <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.meta}>📍 {restaurant.distance}</Text>
-            <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.meta}>
-              Livr. {restaurant.deliveryFee.toLocaleString()} F
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
+      </View>
+    </Pressable>
   );
 }
 
+export default RestaurantCard;
+
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  imageArea: {
-    height: 160,
-    backgroundColor: '#1a0a05',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  emoji: { fontSize: 64 },
-  badge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-  },
-  badgeText: { color: Colors.white, fontSize: FontSize.xs, fontWeight: '700' },
-  openBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+    padding: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  pressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.99 }],
+  },
+  visual: {
+    borderRadius: 18,
+    height: 118,
+    overflow: 'hidden',
+    width: 142,
+  },
+  image: {
+    height: '100%',
+    width: '100%',
+  },
+  favorite: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    borderRadius: 999,
+    height: 32,
+    justifyContent: 'center',
+    left: 10,
+    position: 'absolute',
+    top: 10,
+    width: 32,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  titleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  name: {
+    color: '#0F172A',
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  badge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  category: {
+    color: '#64748B',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 12,
+  },
+  dot: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  metaItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
     gap: 4,
-    backgroundColor: Colors.greenBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(76,175,80,0.3)',
   },
-  openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.green },
-  openText: { fontSize: FontSize.xs, color: Colors.green, fontWeight: '600' },
-  info: { padding: Spacing.md, gap: Spacing.xs },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontSize: FontSize.md, fontWeight: '800', color: Colors.text, flex: 1 },
-  ratingChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    backgroundColor: Colors.dark3, paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: Radius.full,
+  metaText: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  ratingStar: { fontSize: 11 },
-  ratingValue: { fontSize: FontSize.xs, fontWeight: '700', color: Colors.gold },
-  tagsRow: { flexDirection: 'row', gap: Spacing.xs, flexWrap: 'wrap' },
-  tag: {
-    backgroundColor: Colors.dark3, paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
-  },
-  tagText: { fontSize: FontSize.xs, color: Colors.textMuted },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  meta: { fontSize: FontSize.xs, color: Colors.textMuted },
-  metaDot: { color: Colors.border, fontSize: FontSize.xs },
 });

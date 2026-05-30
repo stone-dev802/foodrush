@@ -1,65 +1,106 @@
-// src/components/FeaturedCard.tsx
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Restaurant } from '../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useThemeStore } from '../store/themeStore';
+import { getThemeColors } from '../theme/colors';
+import { getFoodIcon } from '../theme/icons';
 
-type Props = {
-  restaurant: Restaurant;
-  onPress: () => void;
+type FeaturedCardProps = {
+  restaurant: {
+    id: string;
+    name: string;
+    category?: string;
+    cuisine?: string;
+    rating?: number;
+    deliveryTime?: string;
+    emoji?: string;
+  };
+  onPress?: () => void;
 };
 
-export default function FeaturedCard({ restaurant, onPress }: Props) {
+export function FeaturedCard({ restaurant, onPress }: FeaturedCardProps) {
+  const { mode } = useThemeStore();
+  const colors = getThemeColors(mode);
+  const iconName = getFoodIcon(restaurant.emoji ?? restaurant.name, restaurant.category ?? restaurant.cuisine);
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
-      <View style={styles.imageArea}>
-        <Text style={styles.emoji}>{restaurant.emoji}</Text>
+    <Pressable style={({ pressed }) => [styles.card, { backgroundColor: colors.primary }, pressed && styles.pressed]} onPress={onPress}>
+      <View style={styles.visual}>
+        <MaterialCommunityIcons name={iconName as never} size={46} color="#FFFFFF" />
       </View>
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>{restaurant.name}</Text>
-        <View style={styles.meta}>
-          <Text style={styles.rating}>⭐ {restaurant.rating}</Text>
-          <Text style={styles.dot}>·</Text>
-          <Text style={styles.time}>{restaurant.deliveryTime}</Text>
-        </View>
-        <View style={styles.feeChip}>
-          <Text style={styles.feeText}>Livr. {restaurant.deliveryFee.toLocaleString()} F</Text>
+      <View style={styles.content}>
+        <Text style={styles.name} numberOfLines={1}>
+          {restaurant.name}
+        </Text>
+        {!!(restaurant.category ?? restaurant.cuisine) && (
+          <Text style={styles.category} numberOfLines={1}>
+            {restaurant.category ?? restaurant.cuisine}
+          </Text>
+        )}
+        <View style={styles.metaRow}>
+          <MaterialCommunityIcons name="star" size={15} color="#FBBF24" />
+          <Text style={styles.metaText}>{restaurant.rating ?? '4.8'}</Text>
+          <MaterialCommunityIcons name="clock-outline" size={15} color="#FED7AA" />
+          <Text style={styles.metaText}>{restaurant.deliveryTime ?? '25-35 min'}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
+export default FeaturedCard;
+
 const styles = StyleSheet.create({
   card: {
-    width: 180,
-    backgroundColor: Colors.card,
-    borderRadius: Radius.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: '#F97316',
+    borderRadius: 22,
+    flexDirection: 'row',
+    gap: 14,
+    minWidth: 280,
+    padding: 16,
+    shadowColor: '#EA580C',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.22,
+    shadowRadius: 22,
+    elevation: 4,
   },
-  imageArea: {
-    height: 110,
-    backgroundColor: '#1a0a05',
+  pressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
+  visual: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 18,
+    height: 92,
+    justifyContent: 'center',
+    width: 92,
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
   },
-  emoji: { fontSize: 48 },
-  info: { padding: Spacing.sm, gap: 4 },
-  name: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.text },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rating: { fontSize: FontSize.xs, color: Colors.gold },
-  dot: { color: Colors.border, fontSize: FontSize.xs },
-  time: { fontSize: FontSize.xs, color: Colors.textMuted },
-  feeChip: {
-    backgroundColor: Colors.dark3,
-    borderRadius: Radius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: 'flex-start',
-    marginTop: 2,
+  name: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '900',
   },
-  feeText: { fontSize: FontSize.xs, color: Colors.textMuted },
+  category: {
+    color: '#FFEDD5',
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 5,
+  },
+  metaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+    marginTop: 14,
+  },
+  metaText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+    marginRight: 8,
+  },
 });

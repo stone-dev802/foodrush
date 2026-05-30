@@ -1,147 +1,139 @@
-// src/screens/SearchScreen.tsx
+import React, { useMemo, useState } from 'react';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { CategoryPill } from '../components/CategoryPill';
+import { RestaurantCard } from '../components/RestaurantCard';
+import * as mockData from '../data/mockData';
+import { useRestaurants } from '../hooks/useRestaurants';
+import { useThemeStore } from '../store/themeStore';
+import { getThemeColors } from '../theme/colors';
 
-import React, { useState } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, SafeAreaView, StatusBar,
-} from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
-import { RESTAURANTS, CATEGORIES, Restaurant } from '../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
-import RestaurantCard from '../components/RestaurantCard';
+const categories = ((mockData as any).categories ?? (mockData as any).CATEGORIES ?? []) as any[];
+const POPULAR_SEARCHES = ['Burger', 'Pizza', 'Poulet', 'Riz', 'Cafe'];
 
-type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'Main'>;
-};
-
-const POPULAR_SEARCHES = ['Burger', 'Pizza', 'Poulet braisé', 'Sushi', 'Ndolé', 'Café'];
-
-export default function SearchScreen({ navigation }: Props) {
+export function SearchScreen() {
+  const navigation = useNavigation<any>();
+  const { mode } = useThemeStore();
+  const { restaurants, source } = useRestaurants();
+  const colors = getThemeColors(mode);
   const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
 
-  const results = query.length > 1
-    ? RESTAURANTS.filter(r =>
-        r.name.toLowerCase().includes(query.toLowerCase()) ||
-        r.tags.some(t => t.toLowerCase().includes(query.toLowerCase())) ||
-        r.menu.some(m => m.name.toLowerCase().includes(query.toLowerCase()))
-      )
-    : [];
+  const results = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return restaurants.filter((restaurant) => {
+      const matchesCategory =
+        activeCategory === 'all' ||
+        restaurant.categoryId === activeCategory ||
+        restaurant.category === activeCategory;
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        restaurant.name?.toLowerCase().includes(normalizedQuery) ||
+        restaurant.category?.toLowerCase().includes(normalizedQuery) ||
+        restaurant.cuisine?.toLowerCase().includes(normalizedQuery);
+
+      return matchesCategory && matchesQuery;
+    });
+  }, [activeCategory, query]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
-
+    <ScrollView style={[styles.screen, { backgroundColor: colors.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explorer 🔍</Text>
+        <View style={styles.headerIcon}>
+          <Ionicons name="search" size={23} color="#F97316" />
+        </View>
+        <View>
+          <Text style={styles.eyebrow}>Recherche</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Trouver un plat</Text>
+        </View>
       </View>
 
-      <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
+      <View style={[styles.searchBox, { backgroundColor: colors.surface }]}>
+        <Ionicons name="search" size={20} color="#94A3B8" />
         <TextInput
+          placeholder="Restaurant, plat ou categorie"
+          placeholderTextColor="#94A3B8"
           style={styles.searchInput}
-          placeholder="Restaurant, plat, cuisine..."
-          placeholderTextColor={Colors.textMuted}
           value={query}
           onChangeText={setQuery}
-          autoFocus
+          autoCapitalize="none"
         />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={() => setQuery('')}>
-            <Text style={styles.clearIcon}>✕</Text>
-          </TouchableOpacity>
+        {!!query && (
+          <Pressable onPress={() => setQuery('')}>
+            <Ionicons name="close-circle" size={20} color="#CBD5E1" />
+          </Pressable>
         )}
       </View>
 
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        {query.length < 2 ? (
-          <>
-            <Text style={styles.sectionTitle}>Recherches populaires</Text>
-            <View style={styles.tagsWrap}>
-              {POPULAR_SEARCHES.map(s => (
-                <TouchableOpacity key={s} style={styles.popularTag} onPress={() => setQuery(s)}>
-                  <Text style={styles.popularTagText}>🔥 {s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+      <View style={[styles.quickSection, { backgroundColor: colors.surface }]}>
+        <View style={styles.quickTitleRow}>
+          <MaterialCommunityIcons name="fire" size={18} color="#F97316" />
+          <Text style={[styles.quickTitle, { color: colors.text }]}>Recherches populaires</Text>
+        </View>
+        <View style={styles.quickTags}>
+          {POPULAR_SEARCHES.map((tag) => (
+            <Pressable key={tag} style={styles.tag} onPress={() => setQuery(tag)}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
-            <Text style={styles.sectionTitle}>Catégories</Text>
-            <View style={styles.categoriesGrid}>
-              {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
-                <TouchableOpacity key={cat.id} style={styles.catCard} onPress={() => setQuery(cat.label)}>
-                  <Text style={styles.catEmoji}>{cat.emoji}</Text>
-                  <Text style={styles.catLabel}>{cat.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>
-              {results.length > 0
-                ? `${results.length} résultat${results.length > 1 ? 's' : ''} pour "${query}"`
-                : `Aucun résultat pour "${query}"`}
-            </Text>
-            {results.length === 0 ? (
-              <View style={styles.noResult}>
-                <Text style={styles.noResultEmoji}>😔</Text>
-                <Text style={styles.noResultText}>Aucun restaurant ou plat trouvé</Text>
-              </View>
-            ) : (
-              results.map((r, i) => (
-                <RestaurantCard
-                  key={r.id}
-                  restaurant={r}
-                  onPress={() => navigation.navigate('RestaurantDetails', { restaurant: r })}
-                  delay={i * 50}
-                />
-              ))
-            )}
-          </>
+      <FlatList
+        data={categories}
+        horizontal
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryList}
+        renderItem={({ item }) => (
+          <CategoryPill label={item.name} emoji={item.emoji} active={activeCategory === item.id} onPress={() => setActiveCategory(item.id)} />
         )}
-        <View style={{ height: 80 }} />
-      </ScrollView>
-    </SafeAreaView>
+      />
+
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Resultats</Text>
+        <Text style={styles.sectionMeta}>{results.length} · {source === 'api' ? 'API' : 'local'}</Text>
+      </View>
+
+      {results.length === 0 ? (
+        <View style={[styles.empty, { backgroundColor: colors.surface }]}>
+          <Ionicons name="restaurant-outline" size={38} color="#CBD5E1" />
+          <Text style={styles.emptyTitle}>Aucun resultat</Text>
+          <Text style={styles.emptyText}>Essaie une autre recherche ou une autre categorie.</Text>
+        </View>
+      ) : (
+        results.map((restaurant) => (
+          <RestaurantCard key={restaurant.id} restaurant={restaurant} onPress={() => navigation.navigate('RestaurantDetails', { restaurantId: restaurant.id })} />
+        ))
+      )}
+    </ScrollView>
   );
 }
 
+export default SearchScreen;
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.dark },
-  header: {
-    paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: Spacing.sm,
-  },
-  headerTitle: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.text },
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
-    backgroundColor: Colors.card, borderRadius: Radius.md, borderWidth: 1,
-    borderColor: Colors.border, paddingHorizontal: Spacing.md,
-    paddingVertical: 13, marginHorizontal: Spacing.md, marginBottom: Spacing.md,
-  },
-  searchIcon: { fontSize: 16 },
-  searchInput: { flex: 1, color: Colors.text, fontSize: FontSize.base },
-  clearIcon: { color: Colors.textMuted, fontSize: 16, padding: 4 },
-  body: { flex: 1, paddingHorizontal: Spacing.md },
-  sectionTitle: {
-    fontSize: FontSize.md, fontWeight: '700', color: Colors.text,
-    marginBottom: Spacing.sm, marginTop: Spacing.sm,
-  },
-  tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
-  popularTag: {
-    backgroundColor: Colors.card, borderRadius: Radius.full, paddingHorizontal: 14,
-    paddingVertical: 8, borderWidth: 1, borderColor: Colors.border,
-  },
-  popularTagText: { fontSize: FontSize.sm, color: Colors.text, fontWeight: '500' },
-  categoriesGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md,
-  },
-  catCard: {
-    width: '30%', backgroundColor: Colors.card, borderRadius: Radius.md,
-    padding: Spacing.md, alignItems: 'center', gap: Spacing.xs,
-    borderWidth: 1, borderColor: Colors.border,
-  },
-  catEmoji: { fontSize: 32 },
-  catLabel: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.text },
-  noResult: { alignItems: 'center', paddingVertical: Spacing.xxl, gap: Spacing.md },
-  noResultEmoji: { fontSize: 56 },
-  noResultText: { fontSize: FontSize.base, color: Colors.textMuted },
+  screen: { backgroundColor: '#F8FAFC', flex: 1 },
+  content: { padding: 20, paddingBottom: 38 },
+  header: { alignItems: 'center', flexDirection: 'row', gap: 12, marginBottom: 18, marginTop: 10 },
+  headerIcon: { alignItems: 'center', backgroundColor: '#FFF7ED', borderRadius: 16, height: 48, justifyContent: 'center', width: 48 },
+  eyebrow: { color: '#F97316', fontSize: 13, fontWeight: '900', textTransform: 'uppercase' },
+  title: { color: '#0F172A', fontSize: 30, fontWeight: '900', marginTop: 4 },
+  searchBox: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
+  searchInput: { color: '#0F172A', flex: 1, fontSize: 15, fontWeight: '700' },
+  quickSection: { backgroundColor: '#FFFFFF', borderRadius: 20, marginTop: 16, padding: 14 },
+  quickTitleRow: { alignItems: 'center', flexDirection: 'row', gap: 7 },
+  quickTitle: { color: '#0F172A', fontSize: 15, fontWeight: '900' },
+  quickTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 12 },
+  tag: { backgroundColor: '#FFF7ED', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 },
+  tagText: { color: '#F97316', fontSize: 13, fontWeight: '900' },
+  categoryList: { gap: 10, paddingVertical: 18 },
+  sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  sectionTitle: { color: '#0F172A', fontSize: 20, fontWeight: '900' },
+  sectionMeta: { color: '#94A3B8', fontSize: 13, fontWeight: '900' },
+  empty: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24 },
+  emptyTitle: { color: '#0F172A', fontSize: 18, fontWeight: '900', marginTop: 10 },
+  emptyText: { color: '#64748B', fontSize: 13, fontWeight: '600', marginTop: 5, textAlign: 'center' },
 });

@@ -1,321 +1,223 @@
-// src/screens/HomeScreen.tsx
+import React, { useMemo, useState } from 'react';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FlatList, Image, ImageBackground, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { CategoryPill } from '../components/CategoryPill';
+import { RestaurantCard } from '../components/RestaurantCard';
+import * as mockData from '../data/mockData';
+import { useRestaurants } from '../hooks/useRestaurants';
+import { useThemeStore } from '../store/themeStore';
+import { getThemeColors } from '../theme/colors';
 
-import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  FlatList,
-  TouchableOpacity,
-  TextInput,
-  StatusBar,
-  SafeAreaView,
-} from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
-import { RESTAURANTS, CATEGORIES, Restaurant } from '../data/mockData';
-import { Colors, Spacing, Radius, FontSize } from '../theme/colors';
-import RestaurantCard from '../components/RestaurantCard';
-import CategoryPill from '../components/CategoryPill';
-import FeaturedCard from '../components/FeaturedCard';
+const categories = ((mockData as any).categories ?? (mockData as any).CATEGORIES ?? []) as any[];
 
-type Props = {
-  navigation: StackNavigationProp<RootStackParamList, 'Main'>;
-};
-
-export default function HomeScreen({ navigation }: Props) {
-  const [search, setSearch] = useState('');
+export function HomeScreen() {
+  const { t } = useTranslation();
+  const navigation = useNavigation<any>();
+  const { mode } = useThemeStore();
+  const { restaurants, loading, source } = useRestaurants();
+  const colors = getThemeColors(mode);
+  const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  const filteredRestaurants = RESTAURANTS.filter((r) => {
-    const matchCat = activeCategory === 'all' || r.category === activeCategory;
-    const matchSearch =
-      search === '' ||
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-    return matchCat && matchSearch;
-  });
+  const filteredRestaurants = useMemo(() => {
+    return restaurants.filter((restaurant) => {
+      const matchesCategory =
+        activeCategory === 'all' ||
+        restaurant.categoryId === activeCategory ||
+        restaurant.category === activeCategory;
+      const matchesQuery = restaurant.name?.toLowerCase().includes(query.toLowerCase());
+      return matchesCategory && matchesQuery;
+    });
+  }, [activeCategory, query, restaurants]);
 
-  const featuredRestos = RESTAURANTS.slice(0, 3);
-
-  const handleRestaurantPress = useCallback(
-    (restaurant: Restaurant) => {
-      navigation.navigate('RestaurantDetails', { restaurant });
-    },
-    [navigation]
-  );
+  const openRestaurant = (restaurantId: string) => {
+    navigation.navigate('RestaurantDetails', { restaurantId });
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark} />
-      <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[1]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
+    <ScrollView style={[styles.screen, { backgroundColor: colors.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <View>
           <View style={styles.locationRow}>
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationLabel}>Livraison à </Text>
-            <Text style={styles.locationCity}>Yaoundé, CM ▾</Text>
-          </View>
-          <View style={styles.headerBottom}>
-            <View>
-              <Text style={styles.greeting}>
-                Bonjour, <Text style={styles.greetingName}>Pierre 👋</Text>
-              </Text>
-              <Text style={styles.subGreeting}>Qu'est-ce qui vous fait envie ?</Text>
+            <View style={[styles.locationIcon, { backgroundColor: colors.surfaceMuted }]}>
+              <Ionicons name="location-outline" size={15} color={colors.primary} />
             </View>
-            <TouchableOpacity style={styles.avatarBtn}>
-              <Text style={styles.avatarEmoji}>👤</Text>
-            </TouchableOpacity>
+            <Text style={[styles.location, { color: colors.text }]}>{t('home.location')}</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
           </View>
+          <Text style={[styles.title, { color: colors.text }]}>{t('home.greeting')}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>{t('home.subtitle')}</Text>
         </View>
+        <Pressable style={styles.avatar} onPress={() => navigation.navigate('Profile')}>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80' }}
+            style={styles.avatarImage}
+          />
+        </Pressable>
+      </View>
 
-        {/* Search (sticky) */}
-        <View style={styles.searchWrapper}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Restaurant, plat, cuisine..."
-              placeholderTextColor={Colors.textMuted}
-              value={search}
-              onChangeText={setSearch}
-            />
-            {search.length > 0 && (
-              <TouchableOpacity onPress={() => setSearch('')}>
-                <Text style={styles.clearIcon}>✕</Text>
-              </TouchableOpacity>
-            )}
+      <View style={styles.searchRow}>
+        <View style={[styles.searchBox, { backgroundColor: colors.surface }]}>
+          <Ionicons name="search" size={21} color={colors.textSoft} />
+          <TextInput
+            placeholder={t('home.searchPlaceholder')}
+            placeholderTextColor={colors.textSoft}
+            style={[styles.searchInput, { color: colors.text }]}
+            value={query}
+            onChangeText={setQuery}
+          />
+          {!!query && (
+            <Pressable onPress={() => setQuery('')}>
+              <Ionicons name="close-circle" size={20} color={colors.textSoft} />
+            </Pressable>
+          )}
+        </View>
+        <Pressable style={[styles.filterButton, { backgroundColor: colors.surface }]}>
+          <Ionicons name="options-outline" size={24} color={colors.text} />
+        </Pressable>
+      </View>
+
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=900&q=85' }}
+        style={styles.promo}
+        imageStyle={styles.promoImage}
+      >
+        <View style={styles.promoOverlay} />
+        <View style={styles.discountBubble}>
+          <Text style={styles.discountText}>-30%</Text>
+        </View>
+        <View style={styles.promoContent}>
+          <View style={styles.specialBadge}>
+            <MaterialCommunityIcons name="fire" size={13} color="#FFB36A" />
+            <Text style={styles.specialText}>{t('home.specialOffer')}</Text>
           </View>
-        </View>
-
-        {/* Promo banner */}
-        <View style={styles.promoBanner}>
-          <Text style={styles.promoEmoji}>🎉</Text>
-          <View style={styles.promoText}>
-            <Text style={styles.promoTitle}>Livraison GRATUITE</Text>
-            <Text style={styles.promoSub}>Sur votre 1ère commande · Code : RUSH237</Text>
-          </View>
-          <TouchableOpacity style={styles.promoBtn}>
-            <Text style={styles.promoBtnText}>Profiter</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Categories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
-        >
-          {CATEGORIES.map((cat) => (
-            <CategoryPill
-              key={cat.id}
-              label={cat.label}
-              emoji={cat.emoji}
-              active={activeCategory === cat.id}
-              onPress={() => setActiveCategory(cat.id)}
-            />
-          ))}
-        </ScrollView>
-
-        {/* Featured (only when 'all') */}
-        {activeCategory === 'all' && search === '' && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🔥 Populaires</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAll}>Voir tout</Text>
-              </TouchableOpacity>
+          <Text style={styles.promoTitle}>{t('home.promoTitle')}</Text>
+          <Text style={styles.promoText}>{t('home.promoValidity')}</Text>
+          <Pressable style={styles.promoButton}>
+            <Text style={styles.promoButtonText}>{t('home.orderNow')}</Text>
+            <View style={styles.promoArrow}>
+              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.featuredContainer}
-            >
-              {featuredRestos.map((r) => (
-                <FeaturedCard
-                  key={r.id}
-                  restaurant={r}
-                  onPress={() => handleRestaurantPress(r)}
-                />
-              ))}
-            </ScrollView>
-          </>
+          </Pressable>
+        </View>
+      </ImageBackground>
+
+      <FlatList
+        data={categories}
+        horizontal
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryList}
+        renderItem={({ item }) => (
+          <CategoryPill
+            label={item.label ?? item.name}
+            emoji={item.emoji}
+            active={activeCategory === item.id}
+            onPress={() => setActiveCategory(item.id)}
+          />
         )}
+      />
 
-        {/* All Restaurants */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {activeCategory === 'all' ? 'Tous les restaurants' : 'Résultats'}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('home.popularRestaurants')}</Text>
+        <Pressable style={styles.seeAll} onPress={() => navigation.navigate('Search')}>
+          <Text style={[styles.seeAllText, { color: colors.primary }]}>
+            {loading ? t('common.loading') : t('common.seeAll')}
           </Text>
-          <Text style={styles.resultCount}>{filteredRestaurants.length} trouvés</Text>
+          <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+        </Pressable>
+      </View>
+      <Text style={[styles.sourceText, { color: colors.textSoft }]}>
+        {t('common.source')}: {source === 'api' ? t('common.apiBackend') : t('common.localData')}
+      </Text>
+
+      {filteredRestaurants.length === 0 ? (
+        <View style={[styles.empty, { backgroundColor: colors.surface }]}>
+          <Ionicons name="restaurant-outline" size={36} color="#CBD5E1" />
+          <Text style={[styles.emptyText, { color: colors.textMuted }]}>{t('home.emptyRestaurants')}</Text>
         </View>
-
-        {filteredRestaurants.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>😔</Text>
-            <Text style={styles.emptyText}>Aucun résultat pour "{search}"</Text>
-            <TouchableOpacity onPress={() => { setSearch(''); setActiveCategory('all'); }}>
-              <Text style={styles.emptyReset}>Réinitialiser la recherche</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          filteredRestaurants.map((r, i) => (
-            <RestaurantCard
-              key={r.id}
-              restaurant={r}
-              onPress={() => handleRestaurantPress(r)}
-              delay={i * 60}
-            />
-          ))
-        )}
-
-        <View style={{ height: Spacing.xxl + 20 }} />
-      </ScrollView>
-    </SafeAreaView>
+      ) : (
+        filteredRestaurants.map((restaurant) => (
+          <RestaurantCard key={restaurant.id} restaurant={restaurant} onPress={() => openRestaurant(String(restaurant.id))} />
+        ))
+      )}
+    </ScrollView>
   );
 }
 
+export default HomeScreen;
+
 const styles = StyleSheet.create({
-  safeArea: {
+  screen: { backgroundColor: '#F8FAFC', flex: 1 },
+  content: { padding: 24, paddingBottom: 38 },
+  header: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 26, marginTop: 10 },
+  locationRow: { alignItems: 'center', flexDirection: 'row', gap: 5 },
+  locationIcon: { alignItems: 'center', borderRadius: 999, height: 24, justifyContent: 'center', width: 24 },
+  location: { color: '#171717', fontSize: 13, fontWeight: '900' },
+  title: { color: '#0F172A', fontSize: 31, fontWeight: '900', letterSpacing: 0, marginTop: 22 },
+  subtitle: { color: '#64748B', fontSize: 14, fontWeight: '600', marginTop: 6 },
+  avatar: { borderRadius: 999, height: 48, overflow: 'hidden', width: 48 },
+  avatarImage: { height: '100%', width: '100%' },
+  searchRow: { alignItems: 'center', flexDirection: 'row', gap: 14, marginBottom: 24 },
+  searchBox: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    elevation: 3,
     flex: 1,
-    backgroundColor: Colors.dark,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.dark,
-  },
-  header: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-  },
-  locationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
+    gap: 12,
+    height: 62,
+    paddingHorizontal: 18,
+    shadowColor: '#1F160F',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.06,
+    shadowRadius: 28,
   },
-  locationIcon: { fontSize: 13, marginRight: 4 },
-  locationLabel: { fontSize: FontSize.sm, color: Colors.textMuted },
-  locationCity: { fontSize: FontSize.sm, color: Colors.text, fontWeight: '700' },
-  headerBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  filterButton: {
     alignItems: 'center',
-  },
-  greeting: {
-    fontSize: FontSize.xxl,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  greetingName: { color: Colors.primary },
-  subGreeting: { fontSize: FontSize.sm, color: Colors.textMuted, marginTop: 2 },
-  avatarBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.card,
-    alignItems: 'center',
+    borderRadius: 20,
+    elevation: 3,
+    height: 62,
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    shadowColor: '#1F160F',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.06,
+    shadowRadius: 28,
+    width: 62,
   },
-  avatarEmoji: { fontSize: 22 },
-
-  searchWrapper: {
-    backgroundColor: Colors.dark,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  searchBar: {
-    flexDirection: 'row',
+  searchInput: { color: '#0F172A', flex: 1, fontSize: 14, fontWeight: '600' },
+  promo: { borderRadius: 24, height: 182, justifyContent: 'center', marginBottom: 24, overflow: 'hidden' },
+  promoImage: { borderRadius: 24 },
+  promoOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.58)' },
+  promoContent: { maxWidth: '62%', paddingLeft: 22 },
+  discountBubble: {
     alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    gap: Spacing.sm,
+    backgroundColor: '#F36B21',
+    borderRadius: 999,
+    height: 58,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    width: 58,
   },
-  searchIcon: { fontSize: 16 },
-  searchInput: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: FontSize.base,
-  },
-  clearIcon: { color: Colors.textMuted, fontSize: 16, padding: 4 },
-
-  promoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: 'rgba(255,75,43,0.08)',
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,75,43,0.2)',
-    gap: Spacing.sm,
-  },
-  promoEmoji: { fontSize: 28 },
-  promoText: { flex: 1 },
-  promoTitle: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.primary },
-  promoSub: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2 },
-  promoBtn: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.sm,
-  },
-  promoBtnText: { color: Colors.white, fontSize: FontSize.xs, fontWeight: '700' },
-
-  categoriesContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
-    flexDirection: 'row',
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: FontSize.lg,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  seeAll: {
-    fontSize: FontSize.sm,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  resultCount: {
-    fontSize: FontSize.sm,
-    color: Colors.textMuted,
-  },
-
-  featuredContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
-    flexDirection: 'row',
-  },
-
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xxl,
-    gap: Spacing.md,
-  },
-  emptyEmoji: { fontSize: 56 },
-  emptyText: { fontSize: FontSize.base, color: Colors.textMuted },
-  emptyReset: { fontSize: FontSize.base, color: Colors.primary, fontWeight: '600' },
+  discountText: { color: '#FFFFFF', fontSize: 16, fontWeight: '900' },
+  specialBadge: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: 'rgba(243,107,33,0.18)', borderRadius: 999, flexDirection: 'row', gap: 5, marginBottom: 12, paddingHorizontal: 9, paddingVertical: 6 },
+  specialText: { color: '#FFB36A', fontSize: 11, fontWeight: '900' },
+  promoTitle: { color: '#FFFFFF', fontSize: 21, fontWeight: '900', lineHeight: 27 },
+  promoText: { color: '#F4E8DD', fontSize: 12, fontWeight: '600', marginTop: 8 },
+  promoButton: { alignItems: 'center', alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: 999, flexDirection: 'row', gap: 10, marginTop: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  promoButtonText: { color: '#171717', fontSize: 11, fontWeight: '900' },
+  promoArrow: { alignItems: 'center', backgroundColor: '#F36B21', borderRadius: 999, height: 22, justifyContent: 'center', width: 22 },
+  categoryList: { gap: 12, paddingBottom: 24 },
+  sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14, marginTop: 2 },
+  sectionTitle: { color: '#0F172A', fontSize: 18, fontWeight: '900' },
+  seeAll: { alignItems: 'center', flexDirection: 'row', gap: 2 },
+  seeAllText: { fontSize: 12, fontWeight: '900' },
+  sourceText: { fontSize: 11, fontWeight: '700', marginBottom: 10, marginTop: -6 },
+  empty: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, padding: 24 },
+  emptyText: { color: '#64748B', fontSize: 15, fontWeight: '800', marginTop: 8 },
 });

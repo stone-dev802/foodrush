@@ -1,18 +1,23 @@
-// App.tsx
-
+//fichier App.tsx
+import 'react-native-gesture-handler';
+import './src/i18n';
 import React from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={styles.container}>
       <AppNavigator />
+      <StatusBar style="auto" />
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  container: {
+    flex: 1,
+  },
 });
