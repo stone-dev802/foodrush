@@ -1,32 +1,35 @@
 {
   "name": "foodrush-backend",
   "version": "1.0.0",
-  "private": true,
+  "description": "FoodRush API Backend",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
     "start": "node dist/server.js",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "db:seed": "tsx src/scripts/seedMongo.ts"
+    "dev": "nodemon --exec node --loader ts-node/esm src/server.ts",
+    "db:seed": "node --loader ts-node/esm src/scripts/seed.ts"
   },
   "dependencies": {
-    "axios": "^1.17.0",
-    "bcryptjs": "^3.0.3",
+    "axios": "^1.6.8",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.15.1",
-    "socket.io": "^4.8.3"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.2",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^22.10.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.12.7",
+    "@types/socket.io": "^3.0.2",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }

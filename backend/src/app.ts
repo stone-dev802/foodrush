@@ -1,9 +1,9 @@
 import cors from 'cors';
 import express from 'express';
-import { authRouter } from './api/auth.js';
-import { ordersRouter } from './api/orders.js';
-import { paymentsRouter } from './api/payments.js';
-import { restaurantsRouter } from './api/restaurants.js';
+import authRouter from './api/auth.js';
+import ordersRouter from './api/orderRoutes.js';
+import paymentsRouter from './api/payments.js';
+import restaurantsRouter from './api/restaurantRoutes.js';
 import odooRoutes from './api/odooRoutes.js';
 import webhookRoutes from './api/webhookRoutes.js';
 import businessRoutes from './api/businessRoutes.js';
