@@ -4,6 +4,9 @@ import { authRouter } from './api/auth.js';
 import { ordersRouter } from './api/orders.js';
 import { paymentsRouter } from './api/payments.js';
 import { restaurantsRouter } from './api/restaurants.js';
+import odooRoutes from './api/odooRoutes.js';
+import webhookRoutes from './api/webhookRoutes.js';
+import businessRoutes from './api/businessRoutes.js';
 
 export function createApp() {
   const app = express();
@@ -27,6 +30,9 @@ export function createApp() {
   app.use('/api/restaurants', restaurantsRouter);
   app.use('/api/orders', ordersRouter);
   app.use('/api/payments', paymentsRouter);
+  app.use('/api/odoo', odooRoutes);
+  app.use('/api/webhooks', webhookRoutes);
+  app.use('/api/business', businessRoutes);
 
   return app;
 }

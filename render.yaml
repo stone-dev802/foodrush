@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: foodrush-backend
+    runtime: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+      - key: JWT_SECRET
+      - key: ODOO_URL
+      - key: ODOO_DB
+      - key: ODOO_USER
+      - key: ODOO_PASSWORD
+
+  - type: web
+    name: foodrush-web
+    runtime: static
+    buildCommand: cd WEB && npm install && npm run build
+    staticPublishPath: ./WEB/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

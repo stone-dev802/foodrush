@@ -1,62 +1,55 @@
-import { Schema, model } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export type OrderItem = {
-  id: string;
+export type OrderStatus = 
+  | 'pending' 
+  | 'confirmed' 
+  | 'preparing' 
+  | 'ready' 
+  | 'out_for_delivery' 
+  | 'delivered' 
+  | 'cancelled';
+
+export interface OrderItem {
+  productId: string;
   name: string;
   price: number;
   quantity: number;
-  restaurantId?: string | number;
-};
+}
 
-export type Order = {
+export interface Order {
   id: string;
-  userId?: string;
-  customerName?: string;
+  userId: string;
+  restaurantId: string;
   items: OrderItem[];
+  totalAmount: number;
   subtotal: number;
   deliveryFee: number;
-  total: number;
+  status: OrderStatus;
+  deliveryAddress: string;
   paymentMethod: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  createdAt: string;
-};
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  odooId?: string; // Référence vers la commande dans Odoo
+  createdAt: Date;
+}
 
-const orderItemSchema = new Schema<OrderItem>(
-  {
-    id: String,
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    quantity: { type: Number, required: true },
-    restaurantId: Schema.Types.Mixed,
-  },
-  { _id: false },
-);
+const orderSchema = new Schema<Order>({
+  userId: { type: String, required: true },
+  restaurantId: { type: String, required: true },
+  items: [{
+    productId: String,
+    name: String,
+    price: Number,
+    quantity: Number
+  }],
+  totalAmount: { type: Number, required: true },
+  subtotal: { type: Number, default: 0 },
+  deliveryFee: { type: Number, default: 0 },
+  status: { type: String, default: 'pending' },
+  deliveryAddress: { type: String, required: true },
+  paymentMethod: { type: String, default: 'cash' },
+  paymentStatus: { type: String, default: 'pending' },
+  odooId: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
 
-const orderSchema = new Schema(
-  {
-    userId: String,
-    customerName: String,
-    items: { type: [orderItemSchema], default: [] },
-    subtotal: { type: Number, required: true },
-    deliveryFee: { type: Number, required: true },
-    total: { type: Number, required: true },
-    paymentMethod: { type: String, required: true },
-    status: { type: String, default: 'confirmed' },
-  },
-  {
-    timestamps: true,
-    toJSON: {
-      virtuals: true,
-      versionKey: false,
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
-        ret.createdAt = ret.createdAt?.toISOString?.() ?? ret.createdAt;
-        delete ret._id;
-        delete ret.updatedAt;
-        return ret;
-      },
-    },
-  },
-);
-
-export const OrderModel = model('Order', orderSchema);
+export const OrderModel = mongoose.models.Order || mongoose.model<Order>('Order', orderSchema);
